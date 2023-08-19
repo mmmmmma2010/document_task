@@ -26,7 +26,7 @@ class FileUploadSerializer(serializers.ModelSerializer):
         base64_data = validated_data.pop('base64_data')
         ext,content=decode_base64(base64_data)
 
-        image_ext=["JPEG","JPG","PNG","GIF"]
+        image_ext=["jpeg","jpg","png","gif"]
         pdf_ext=["pdf"]
         file_type="pdf"
 

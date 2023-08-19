@@ -9,7 +9,9 @@ import fitz
 from pdf2image import convert_from_path
 from rest_framework.views import APIView
 from rest_framework.renderers import JSONRenderer
+import logging
 
+logger = logging.getLogger()
 
 class FileUploadView(generics.CreateAPIView):
     
@@ -52,8 +54,6 @@ class UploadedPDFViewSet(ViewSet,generics.ListAPIView,generics.DestroyAPIView,ge
         pdf = fitz.open(file)
         num_pages = pdf.page_count
         page = pdf.load_page(0)
-        print("num_pages",num_pages)
-        print("page",page.__dir__())
         page_width=page.rect.width
         page_height=page.rect.height
         response={
@@ -88,11 +88,9 @@ class ConvertPDFToImageViewSet(APIView):
         try:
             pdf = UploadedFile.objects.get(pk=pdf_id)
             images = convert_from_path(pdf.file.path)
-
             for i, img in enumerate(images):
                 img_path = pdf.file.path.replace('.pdf', f'_{i+1}.jpg')
                 img.save(img_path, 'JPEG')
-
                 new_image = UploadedFile.objects.create(
                     file=img_path,
                 )
@@ -100,5 +98,7 @@ class ConvertPDFToImageViewSet(APIView):
             return Response({'image': img_path}, status=status.HTTP_200_OK)
         except UploadedFile.DoesNotExist:
             raise NotFound(detail='PDF not found')
+        
         except Exception as e:
+            logger.debug("error: %s", str(e))
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
